@@ -11,9 +11,10 @@ constexpr double PI = std::numbers::pi;//π
 constexpr double E0 = 8.85418781762039E-12;///<Электрическая постоянная, м⁻³·кг⁻¹·с⁴·А²
 
 constexpr size_t FLENGTH = 1250;//Половина длины выходных массивов
+constexpr size_t DOUBLEFLENGTH = 2*FLENGTH;//Длина выходных массивов
 constexpr unsigned short dF_Hz = 100;//Шаг по частоте для построения спектра, Гц
 constexpr size_t dtau_us = 4;//Шаг по задержке для построения АКФ, мкс
-constexpr size_t LENGTH = 175;
+constexpr size_t LENGTH = 175;//Длина массива АКФ
 
 
 std::complex<double> cintegral(std::complex<double> a, std::complex<double> b, unsigned step_count)
@@ -34,14 +35,14 @@ std::complex<double> cintegral(std::complex<double> a, std::complex<double> b, u
 
 void Spectrum(double *freqs_Hz, double *Amps, Plasma_pars *plasma_pars)
 {
-	for(size_t i=0; i<2*FLENGTH; i++)
+    for(size_t i=0; i<DOUBLEFLENGTH; i++)
 	{
         freqs_Hz[i] = 0.0;
         Amps[i] = 0.0;
 	}
     std::complex<double> im{0.0, 1.0};//Мнимая единица
     std::complex<double> izero{0.0, 0.0};//Комплексный ноль
-    std::vector<double> Y(2*FLENGTH), S(2*FLENGTH);
+    std::vector<double> Y(DOUBLEFLENGTH), S(DOUBLEFLENGTH);
     double K = 1.380648813;//Boltzmann constant (*pow(10,-23))
     double E0 = 8.85418781762039;//dielectric constant (*pow(10,-12))
     double eMass = 9.10938291;//mass of electron(kg) (*pow(10,-31))
@@ -71,19 +72,19 @@ void Spectrum(double *freqs_Hz, double *Amps, Plasma_pars *plasma_pars)
             D = sqrt(K*E0*100.0/(plasma_pars->Ne_105cm3*Cm*q*q)*
                 (plasma_pars->Te_K*plasma_pars->Ti_K/(plasma_pars->Te_K + plasma_pars->Ti_K)))*1.E-4;
             alpha = 1.0/(D*k);
-            for (int i = 0; i < 2*FLENGTH; i++)
+            for (int i = 0; i < DOUBLEFLENGTH; i++)
 			{
-                f = double(i - FLENGTH)*double(dF_Hz);
-                if (abs(f) < 1.E4)
+                f = double(i - static_cast<int>(FLENGTH))*double(dF_Hz);
+                if (fabs(f) < 1.E4)
 				{
                     w = 2.0*PI*f;
                     Xe = (w-im*plasma_pars->nu_e_Hz)/(k*a);
                     Xi = (w-im*plasma_pars->nu_i_Hz)/(k*b);
                     SumE = cintegral(izero, Xe, 1000);
                     SumI = cintegral(izero, Xi, 1000);
-                    if (!isnormal(real(SumE)))
+                    if (!std::isnormal(real(SumE)))
                         SumE = izero;
-                    if (!isnormal(real(SumI)))
+                    if (!std::isnormal(real(SumI)))
                         SumI = izero;
 						
                     Rwe = 1.0 - 2.0*Xe*exp(-Xe*Xe)*SumE;
@@ -105,8 +106,8 @@ void Spectrum(double *freqs_Hz, double *Amps, Plasma_pars *plasma_pars)
                         De = (im*plasma_pars->nu_e_Hz)/(k*a)*(2.0*exp(-Xe*Xe)*SumE+im*sqrt(PI)*exp(-Xe*Xe));
                         Di = (im*plasma_pars->nu_i_Hz)/(k*b)*(2.0*exp(-Xi*Xi)*SumI+im*sqrt(PI)*exp(-Xi*Xi));
 
-                        Be = (1.0/(k*a*norm(1.0+De)))*imag(2.0*exp(-Xe*Xe)*SumE + im*sqrt(PI)*exp(-Xe*Xe))\
-                            -norm(De)/(plasma_pars->nu_e_Hz*norm(1.0+De));
+                        // Be = (1.0/(k*a*norm(1.0+De)))*imag(2.0*exp(-Xe*Xe)*SumE + im*sqrt(PI)*exp(-Xe*Xe))\
+                        //     -norm(De)/(plasma_pars->nu_e_Hz*norm(1.0+De));
                         Bi = (1.0/(k*b*norm(1.0+Di)))*imag(2.0*exp(-Xi*Xi)*SumI + im*sqrt(PI)*exp(-Xi*Xi))\
                             -norm(Di)/(plasma_pars->nu_i_Hz*norm(1.0+Di));
 
@@ -122,24 +123,24 @@ void Spectrum(double *freqs_Hz, double *Amps, Plasma_pars *plasma_pars)
                     Y[i] = 0.0;
 				// Y[i]=2.0*norm((1.0+Ci)/epsilon)*Be+2.0*norm(Ce/epsilon)*Bi;
 			}
-            for (int i = 0; i < 2*FLENGTH; i++)
+            for (int i = 0; i < DOUBLEFLENGTH; i++)
 			{
-                if (isfinite(Y[i]))
+                if (std::isfinite(Y[i]))
                     S[i] += Y[i];
                 if(S[i] > S_max)
                     S_max = S[i];
-                freqs_Hz[i] = f = double(i - FLENGTH)*double(dF_Hz);
+                freqs_Hz[i] = double(i - static_cast<int>(FLENGTH))*double(dF_Hz);
 			}
 		}
     }
-    for (int i = 0; i < 2*FLENGTH; i++)
+    for (int i = 0; i < DOUBLEFLENGTH; i++)
         Amps[i] = S[i]/S_max;
 }
 
 void ACF(double *lags_us, double *Amps, double *spectrum)
 {
-    double *SS = new double[2*FLENGTH];
-    ShortComplex *a = new ShortComplex[2*FLENGTH];
+    double SS[DOUBLEFLENGTH];
+    ShortComplex a[DOUBLEFLENGTH];
     for (int i = 0; i < FLENGTH; i++)
     {
         a[i].re = spectrum[i + FLENGTH];
@@ -147,8 +148,8 @@ void ACF(double *lags_us, double *Amps, double *spectrum)
         a[i + FLENGTH].re = spectrum[i];
         a[i + FLENGTH].im = 0.0;
     }
-    universal_fft(a, 2*FLENGTH, true);
-    for (int i = 0; i <= 2*FLENGTH; i++)
+    universal_fft(a, DOUBLEFLENGTH, true);
+    for (int i = 0; i <= DOUBLEFLENGTH; i++)
         SS[i] = sqrt(a[i].re*a[i].re + a[i].im*a[i].im);
 
     /*fftw_std::complex *Sp, *Cp;
@@ -173,10 +174,8 @@ void ACF(double *lags_us, double *Amps, double *spectrum)
     for(size_t tau = 0; tau < LENGTH; tau++)
 	{
         lags_us[tau] = double(tau*dtau_us);
-        Amps[tau] = pow(1.0 - double(tau)/double(LENGTH), 2.0)*a[tau].re/SS[0];// /Norm;
-	}
-    delete [] a;
-    delete [] SS;
+        Amps[tau] = /*pow(1.0 - double(tau)/double(LENGTH), 2.0)**/a[tau].re/SS[0];// /Norm;
+    }
 	
     /*fftw_free(Sp);
 	fftw_free(Cp);

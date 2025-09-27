@@ -1,5 +1,6 @@
 #include "FFT.h"
-#include <math.h>
+#include <cmath>
+#include <numbers>
 
 // This array contains values from 0 to 255 with reverse bit order
 static unsigned char reverse256[]= {
@@ -158,8 +159,6 @@ void fft(ShortComplex *x, int T, bool complement)
             x[I] /= Nmax;
     }
 }
-
-#define M_PI (3.1415926535897932384626433832795)
 
 inline void complex_mul(ShortComplex *z, const ShortComplex *z1, const Complex *z2)
 {
@@ -327,7 +326,7 @@ void universal_fft(ShortComplex *x, int N, bool complement)
     {
     }
     //find --2pi/N/2 = pi/N
-    long double piN= M_PI / N;
+    long double piN= std::numbers::pi / N;
     if (complement)
         piN= -piN;
     //find x_[n] = x[n]*e^--2*j*pi*n*n/N/2 = x[n]*e^j*piN*n*n

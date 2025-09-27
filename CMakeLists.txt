@@ -14,5 +14,5 @@ target_compile_definitions(Plasma PRIVATE PLASMA_LIBRARY)
 
 
 if (WIN32)
-    set(CMAKE_CXX_FLAGS "-static-libgcc -static-libstdc++")
+    set(CMAKE_CXX_FLAGS "-static-libgcc -static-libstdc++ -static -lpthread")
 endif()
