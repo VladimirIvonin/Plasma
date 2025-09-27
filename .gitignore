@@ -21,7 +21,6 @@ docs
 CMakeCache.txt
 CMakeFiles*
 cmake_install.cmake
-*.dylib
 *.autosave
 *.a
 *.core
