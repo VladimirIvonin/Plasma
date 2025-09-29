@@ -78,8 +78,8 @@ void Spectrum(double *freqs_Hz, double *Amps, Plasma_pars *plasma_pars)
                 if (fabs(f) < 1.E4)
 				{
                     w = 2.0*PI*f;
-                    Xe = (w-im*plasma_pars->nu_e_Hz)/(k*a);
-                    Xi = (w-im*plasma_pars->nu_i_Hz)/(k*b);
+                    Xe = (w - im*plasma_pars->nu_e_Hz)/(k*a);
+                    Xi = (w - im*plasma_pars->nu_i_Hz)/(k*b);
                     SumE = cintegral(izero, Xe, 1000);
                     SumI = cintegral(izero, Xi, 1000);
                     if (!std::isnormal(real(SumE)))
