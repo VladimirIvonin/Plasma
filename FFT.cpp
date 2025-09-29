@@ -326,7 +326,7 @@ void universal_fft(ShortComplex *x, int N, bool complement)
     {
     }
     //find --2pi/N/2 = pi/N
-    long double piN= std::numbers::pi / N;
+    long double piN = std::numbers::pi / N;
     if (complement)
         piN= -piN;
     //find x_[n] = x[n]*e^--2*j*pi*n*n/N/2 = x[n]*e^j*piN*n*n

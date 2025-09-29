@@ -149,8 +149,8 @@ void ACF(double *lags_us, double *Amps, double *spectrum)
         a[i + FLENGTH].im = 0.0;
     }
     universal_fft(a, DOUBLEFLENGTH, true);
-    for (int i = 0; i <= DOUBLEFLENGTH; i++)
-        SS[i] = sqrt(a[i].re*a[i].re + a[i].im*a[i].im);
+    for (int i = 0; i < DOUBLEFLENGTH; i++)
+        SS[i] = std::hypot(a[i].re, a[i].im);
 
     /*fftw_std::complex *Sp, *Cp;
 	fftw_plan Plan;
@@ -172,7 +172,7 @@ void ACF(double *lags_us, double *Amps, double *spectrum)
     fftw_execute(Plan);
     double Norm = sqrt(Cp[0][0]*Cp[0][0] + Cp[0][1]*Cp[0][1]);*/
     for(size_t tau = 0; tau < LENGTH; tau++)
-	{
+    {
         lags_us[tau] = double(tau*dtau_us);
         Amps[tau] = /*pow(1.0 - double(tau)/double(LENGTH), 2.0)**/a[tau].re/SS[0];// /Norm;
     }
