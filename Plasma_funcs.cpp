@@ -33,12 +33,12 @@ std::complex<double> cintegral(std::complex<double> a, std::complex<double> b, u
 	return sum;
 }
 
-void Spectrum(double *freqs_Hz, double *Amps, Plasma_pars *plasma_pars)
+void Spectrum(double *freqs_Hz, double *normed_spectrum, Plasma_pars *plasma_pars)
 {
     for(size_t i=0; i<DOUBLEFLENGTH; i++)
 	{
         freqs_Hz[i] = 0.0;
-        Amps[i] = 0.0;
+        normed_spectrum[i] = 0.0;
 	}
     std::complex<double> im{0.0, 1.0};//Мнимая единица
     std::complex<double> izero{0.0, 0.0};//Комплексный ноль
@@ -134,10 +134,10 @@ void Spectrum(double *freqs_Hz, double *Amps, Plasma_pars *plasma_pars)
 		}
     }
     for (int i = 0; i < DOUBLEFLENGTH; i++)
-        Amps[i] = S[i]/S_max;
+        normed_spectrum[i] = S[i]/S_max;
 }
 
-void ACF(double *lags_us, double *Amps, double *spectrum)
+void ACF(double *lags_us, double *normed_spectrum, double *spectrum, bool multiply_by_triangle)
 {
     double SS[DOUBLEFLENGTH];
     ShortComplex a[DOUBLEFLENGTH];
@@ -174,7 +174,10 @@ void ACF(double *lags_us, double *Amps, double *spectrum)
     for(size_t tau = 0; tau < LENGTH; tau++)
     {
         lags_us[tau] = double(tau*dtau_us);
-        Amps[tau] = /*pow(1.0 - double(tau)/double(LENGTH), 2.0)**/a[tau].re/SS[0];// /Norm;
+        normed_spectrum[tau] = a[tau].re/SS[0];// /Norm;
+        if (multiply_by_triangle)
+            // normed_spectrum[tau] *= pow(1.0 - double(tau)/double(LENGTH), 2.0);
+            normed_spectrum[tau] *= 1.0 - double(tau)/double(LENGTH);
     }
 	
     /*fftw_free(Sp);

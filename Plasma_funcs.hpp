@@ -44,19 +44,20 @@ extern "C"
 {
     /**
      * @brief Рассчитывает спектр НР-сигнала
-     * @param[out] freqs_Hz Пустой массив **длиной 2500**, в который будут записаны частоты
-     * @param[out] Amps Пустой массив **длиной 2500**, в который будут записаны нормированные на 1 амплитуды спектра
+     * @param[out] freqs_Hz Пустой массив **длиной 2500**, в который будут записаны частоты, Гц
+     * @param[out] normed_spectrum Пустой массив **длиной 2500**, в который будут записаны нормированные на 1 амплитуды спектра
      * @param[in] plasma_pars Указатель на стурктуру с параметрами ионосферной плазмы
      */
-    void Spectrum(double *freqs_Hz, double *Amps, Plasma_pars *plasma_pars);
+    void Spectrum(double *freqs_Hz, double *normed_spectrum, Plasma_pars *plasma_pars);
 
     /**
      * @brief Рассчитывает автокорреляционную функцию (АКФ) НР-сигнала
      * @param[out] lags_us Пустой массив **длиной 2500**, в который будут записаны задержки, мкс
      * @param[out] Amps Пустой массив **длиной 2500**, в который будут записаны амплитуды АКФ
-     * @param[in] spectrum Массив **длиной 2500**, содержащий амплитуды спектра НР-сигнала
+     * @param[in] normed_spectrum Массив **длиной 2500**, содержащий амплитуды нормированного спектра НР-сигнала
+     * @param[in] multiply_by_triangle `true` — умножить АКФ на треугольник с базой 700 мкс, `false` — не умножать
      */
-    void ACF(double *lags_us, double *Amps, double *spectrum);
+    void ACF(double *lags_us, double *Amps, double *normed_spectrum, bool multiply_by_triangle);
 
     /**
      * @brief Чтение параметров ионосферной плазмы из файла
