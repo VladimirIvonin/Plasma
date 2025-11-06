@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <format>
 
 
 constexpr double PI = std::numbers::pi;//π
@@ -16,12 +17,14 @@ constexpr unsigned short dF_Hz = 100;//Шаг по частоте для пос�
 constexpr size_t dtau_us = 4;//Шаг по задержке для построения АКФ, мкс
 constexpr size_t LENGTH = 175;//Длина массива АКФ
 
+constexpr double error = 1.E-5;//Окрестность для сравнения `double`
+
 
 std::complex<double> cintegral(std::complex<double> a, std::complex<double> b, unsigned step_count)
 {
     std::complex<double> sum{0.0, 0.0};
     std::complex<double> step;
-    if(step_count == 0)
+    if (step_count == 0)
         return sum;
 
     step = (b - a)/double(step_count);
@@ -35,7 +38,7 @@ std::complex<double> cintegral(std::complex<double> a, std::complex<double> b, u
 
 void Spectrum(double *freqs_Hz, double *normed_spectrum, Plasma_pars *plasma_pars)
 {
-    for(size_t i=0; i<DOUBLEFLENGTH; i++)
+    for (size_t i = 0; i < DOUBLEFLENGTH; i++)
 	{
         freqs_Hz[i] = 0.0;
         normed_spectrum[i] = 0.0;
@@ -58,8 +61,11 @@ void Spectrum(double *freqs_Hz, double *normed_spectrum, Plasma_pars *plasma_par
     double C = 0.0;
     for (size_t M = 0; M < 103; M++)
         C += plasma_pars->Con[M];
-    if (C != 100.0)
-        std::cerr<<"Total relative plasma density is more or less than 100%!"<<std::endl;
+    if (C < 100.0 - 0.5 || C > 100.0 + 0.5)
+    {
+        std::cerr<<"Total relative plasma density is more or less than 100%!";
+        std::cerr<<std::format(" ({:.{}f})%)", C, 10)<<std::endl;
+    }
 
     for (size_t M = 0; M < 103; M++)
     {
@@ -171,7 +177,7 @@ void ACF(double *lags_us, double *normed_spectrum, double *spectrum, bool multip
 	}
     fftw_execute(Plan);
     double Norm = sqrt(Cp[0][0]*Cp[0][0] + Cp[0][1]*Cp[0][1]);*/
-    for(size_t tau = 0; tau < LENGTH; tau++)
+    for (size_t tau = 0; tau < LENGTH; tau++)
     {
         lags_us[tau] = double(tau*dtau_us);
         normed_spectrum[tau] = a[tau].re/SS[0];// /Norm;
@@ -222,7 +228,7 @@ void read_pars(char* fullfilename, Plasma_pars *plasma_pars)
     printf("nu_e %f\n", plasma_pars->nu_e_Hz);
     getline(inp, line);
     found = line.find_first_of("[");
-    while(found != -1)
+    while (found != -1)
     {
         double M = 0.0, Cm = 0.0;
         M = std::stod(line.substr(found + 1, 3));
