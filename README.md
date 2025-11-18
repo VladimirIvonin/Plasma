@@ -1,6 +1,6 @@
 # Plasma
 
-Calculation of the plasma scattering spectra
+Calculation of the plasma scattering spectra.
 
 Input plasma parameters see in Plasma_funcs.h. They also listed in Pars.config.
 
